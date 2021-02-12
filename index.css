@@ -1,0 +1,44 @@
+@import url("https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap");
+/*font-family: "Major Mono Display", monospace;*/
+
+.controls {
+    text-align: center;
+    padding-top: 20px;
+}
+
+.controls input {
+    height: 24px;
+}
+
+.controls .error-text {
+    height: 18px;
+    padding-top: 6px;
+    color: red;
+}
+
+.container {
+    padding: 20px 24px 24px;
+
+    position: relative;
+}
+
+.content-wrap {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.content-wrap .content-item {
+    padding: 16px;
+    margin: 4px;
+    line-height: 8px;
+    border-radius: 4px;
+    background-color: #e6e6e6;
+    color: #999;
+    user-select: none;
+}
+
+/*
+#content-container-bottom {
+    content-visibility: auto;
+}
+*/
