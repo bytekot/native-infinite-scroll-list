@@ -12,7 +12,7 @@ class DataGenerator {
     }
 
     getData(page, length) {
-        //console.log(page, length);
+        console.log(page);
         const random = this.makeRandom(this.instanceSeed + page);
         return Array.from({ length: length }, () => random());
     }
@@ -24,35 +24,52 @@ class ListView {
         this.sentinels = document.querySelectorAll('.observer');
         this.itemsCreated = false;
         this.translateY = 0;
+        this.data = {
+            current: null,
+            previous: null
+        };
     }
 
     render(data, flag) { // flag
+        console.log('render data', data);
         if (!this.itemsCreated) {
+            this.data.previous = this.data.current;
+            this.data.current = data;
             this.createListItems(data);
             return;
         }
 
-        /*const position = [];
+        console.log('data', this.data);
 
-        if (scrollDirection === 'bottom') {
-            position.push(contentData.length - 2, contentData.length - 1);
-            this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
-        } else {
-            position.push(currentPosition - 2, currentPosition - 1);
-            this.translateY = this.translateY - this.itemWrappers[1].offsetHeight;
-        }*/
         if (!flag) {
             this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
         } else {
-            this.translateY = this.translateY - this.itemWrappers[0].offsetHeight;
+            this.translateY = this.translateY !== 0 // improve ?
+                ? this.translateY - this.itemWrappers[0].offsetHeight
+                : this.translateY;
         }
 
-        this.itemWrappers.forEach(wrapper => {
-            wrapper.querySelectorAll('span').forEach(
-                (span, index) => span.innerHTML = data[index]
-            );
+        this.itemWrappers.forEach((wrapper, wrapperIndex) => {
+            let content;
+            if (!flag) {
+                content = wrapperIndex === 0 ? this.data.current : data;
+            } else {
+                content = wrapperIndex === 0 ? data : this.data.previous;
+            }
+            console.log('wrapper: ' + wrapperIndex, content);
+            wrapper.querySelectorAll('span').forEach((span, index) => {
+                span.innerHTML = content[index]
+            });
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
+
+        if (!flag) {
+            this.data.previous = this.data.current;
+            this.data.current = data;
+        } else {
+            this.data.current = this.data.previous;
+            this.data.previous = data;
+        }
     }
 
     createListItems(itemsData) {
@@ -96,7 +113,7 @@ class InfiniteScroll {
     createObserver = () => {
         const options = {
             root: null,
-            rootMargin: '500px',
+            rootMargin: '300px',
             threshold: 0
         };
         const callback = entries => {
@@ -125,7 +142,7 @@ class InfiniteScroll {
     setTotal = (total) => {
         this.total = total;
         this.itemsLoaded = 0;
-        this.currentPage = -1; // -1
+        this.currentPage = 0; // -1
         this.dataGenerator = new DataGenerator(Math.random());
         this.nextPage(); // refresh
     }
@@ -142,12 +159,13 @@ class InfiniteScroll {
 
         const pageSize = this.getPageSize();
 
-        this.currentPage++;
-        console.log(this.dataGenerator.getData(this.currentPage, pageSize));
         this.view.render(
             this.dataGenerator.getData(this.currentPage, pageSize)
         );
+        this.currentPage++;
         this.itemsLoaded = this.itemsLoaded + pageSize;
+
+        this.next = true;
     }
 
     previousPage = () => {
@@ -155,8 +173,13 @@ class InfiniteScroll {
             return;
         }
 
+        if (this.next) {
+            this.next = false;
+            this.currentPage--;
+            this.currentPage--;
+        }
+
         this.currentPage--;
-        //if (this.currentPage === 0) {return;}
         this.view.render(
             this.dataGenerator.getData(this.currentPage, 1000), // pageSize calculation
             true
