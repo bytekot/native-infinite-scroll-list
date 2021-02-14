@@ -12,7 +12,6 @@ class DataGenerator {
     }
 
     getData(page, length) {
-        console.log(page);
         const random = this.makeRandom(this.instanceSeed + page);
         return Array.from({ length: length }, () => random());
     }
@@ -31,15 +30,12 @@ class ListView {
     }
 
     render(data, flag) { // flag
-        console.log('render data', data);
         if (!this.itemsCreated) {
             this.data.previous = this.data.current;
             this.data.current = data;
             this.createListItems(data);
             return;
         }
-
-        console.log('data', this.data);
 
         if (!flag) {
             this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
@@ -56,7 +52,6 @@ class ListView {
             } else {
                 content = wrapperIndex === 0 ? data : this.data.previous;
             }
-            console.log('wrapper: ' + wrapperIndex, content);
             wrapper.querySelectorAll('span').forEach((span, index) => {
                 span.innerHTML = content[index]
             });
@@ -147,14 +142,19 @@ class InfiniteScroll {
         this.nextPage(); // refresh
     }
 
-    getPageSize = () => {
+    getPageSize = () => { // Пока принебрегаем
+        return this.pageSize;
         const itemsLeft = this.total - this.itemsLoaded;
-        return itemsLeft > this.pageSize ? this.pageSize : itemsLeft
+        return itemsLeft > this.pageSize ? this.pageSize : itemsLeft;
     }
 
     nextPage = () => {
-        if (!this.total || this.itemsLoaded === this.total) {
+        if (!this.total || (this.currentPage * this.pageSize >= this.total)) {
             return;
+        }
+
+        if (this.currentPage === 0 && (this.itemsLoaded / this.pageSize) > 2) {
+            this.currentPage = 2;
         }
 
         const pageSize = this.getPageSize();
@@ -162,6 +162,7 @@ class InfiniteScroll {
         this.view.render(
             this.dataGenerator.getData(this.currentPage, pageSize)
         );
+
         this.currentPage++;
         this.itemsLoaded = this.itemsLoaded + pageSize;
 
