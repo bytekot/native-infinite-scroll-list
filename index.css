@@ -37,6 +37,10 @@
     user-select: none;
 }
 
+.content-item.hidden {
+    display: none;
+}
+
 /*
 #content-container-bottom {
     content-visibility: auto;

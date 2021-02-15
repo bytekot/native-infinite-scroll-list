@@ -53,8 +53,15 @@ class ListView {
                 content = wrapperIndex === 0 ? data : this.data.previous;
             }
             wrapper.querySelectorAll('span').forEach((span, index) => {
-                span.innerHTML = content[index]
+                span.innerHTML = content[index];
+
+                if (content[index] === undefined) {
+                    span.classList.add('hidden');
+                } else if (span.classList.contains('hidden')) {
+                    span.classList.remove('hidden');
+                }
             });
+
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
 
@@ -83,13 +90,6 @@ class ListView {
                 break;
             }
         }
-    }
-
-    refresh() {
-        this.itemWrappers.forEach(wrapper =>
-            wrapper.querySelectorAll('span').forEach(item => item.innerHTML = '')
-        );
-        //this.render();
     }
 }
 
@@ -137,9 +137,9 @@ class InfiniteScroll {
     setTotal = (total) => {
         this.total = total;
         this.itemsLoaded = 0;
-        this.currentPage = 0; // -1
+        this.currentPage = 0;
         this.dataGenerator = new DataGenerator(Math.random());
-        this.nextPage(); // refresh
+        this.nextPage();
     }
 
     getPageSize = () => {
