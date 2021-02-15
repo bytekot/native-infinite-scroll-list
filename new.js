@@ -115,6 +115,7 @@ class InfiniteScroll {
     constructor(pageSize) {
         this.pageSize = pageSize;
         this.currentPage = 0;
+        this.lastLoadedPage = 0;
         this.itemsLoaded = 0;
         this.total = 0;
         this.view = new ListView(this.pageSize);
@@ -155,7 +156,8 @@ class InfiniteScroll {
     setTotal = (total) => {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
-        this.currentPage = 0;
+        this.currentPage = 0; // -1
+        this.lastLoadedPage = 0;
         this.itemsLoaded = 0;
         this.dataGenerator = new DataGenerator(Math.random());
         this.view.refresh();
@@ -170,22 +172,46 @@ class InfiniteScroll {
         return this.total - ((this.totalPages - 1) * this.pageSize);
     }
 
-    nextPage = () => {
+    nextPage2() {
         if (!this.total || this.currentPage === this.totalPages) {
-            console.log(1111)
             return;
         }
 
+        if (this.lastLoadedPage > this.currentPage) {
+            this.currentPage = this.currentPage + (this.lastLoadedPage - this.currentPage > 1 ? 2 : 1);
+        }
+
+        this.view.render(
+            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize())
+        );
+
+        if (this.lastLoadedPage < this.currentPage) {
+            this.lastLoadedPage = this.currentPage;
+        }
+        this.currentPage++;
+    }
+
+    nextPage() {
+        if (!this.total || this.currentPage === this.totalPages) {
+            return;
+        }
+
+        // IMPROVE
         if (this.currentPage === 0 && (this.itemsLoaded / this.pageSize) > 2) {
             this.currentPage = 2;
         }
 
         const pageSize = this.getCurrentPageSize();
 
+        console.log(this.lastLoadedPage - this.currentPage);
+
         this.view.render(
             this.dataGenerator.getData(this.currentPage, pageSize)
         );
 
+        if (this.lastLoadedPage < this.currentPage) {
+            this.lastLoadedPage = this.currentPage;
+        }// remove
         this.currentPage++;
         
         if (this.itemsLoaded < this.total && (this.itemsLoaded / this.pageSize) < this.currentPage) {
