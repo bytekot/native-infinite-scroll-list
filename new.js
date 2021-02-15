@@ -157,7 +157,6 @@ class InfiniteScroll {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
-        this.lastLoadedPage = 0;
         this.itemsLoaded = 0;
         this.dataGenerator = new DataGenerator(Math.random());
         this.view.refresh();
@@ -177,18 +176,16 @@ class InfiniteScroll {
             return;
         }
 
-        if (this.lastLoadedPage - this.currentPage > 1) {
+        if (this.previousFlag) {
             this.currentPage++;
+            this.previousFlag = false;
         }
 
         this.currentPage++;
         this.view.render(
             this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize())
         );
-
-        if (this.lastLoadedPage < this.currentPage) {
-            this.lastLoadedPage = this.currentPage;
-        }
+        this.nextFlag = true;
     }
 
     previousPage() {
@@ -196,8 +193,9 @@ class InfiniteScroll {
             return;
         }
 
-        if (this.currentPage === this.lastLoadedPage) {
+        if (this.nextFlag) {
             this.currentPage--;
+            this.nextFlag = false;
         }
 
         this.currentPage--;
@@ -205,6 +203,7 @@ class InfiniteScroll {
             this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize()),
             true
         );
+        this.previousFlag = true;
     }
 }
 
