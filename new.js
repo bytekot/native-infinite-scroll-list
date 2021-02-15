@@ -149,21 +149,20 @@ class InfiniteScroll {
 
     setTotal = (total) => {
         this.total = total;
-        this.itemsLoaded = 0;
+        this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
+        this.itemsLoaded = 0;
         this.dataGenerator = new DataGenerator(Math.random());
         this.view.refresh();
         this.nextPage();
     }
 
-    getPageSize = () => {
-        if (this.itemsLoaded / this.pageSize > this.currentPage) {
-            console.log(this.itemsLoaded, this.pageSize, this.currentPage);
+    getPageSize() {
+        if (this.currentPage + 1 < this.totalPages) {
             return this.pageSize;
         }
-        const itemsLeft = this.total - this.itemsLoaded;
 
-        return itemsLeft > this.pageSize ? this.pageSize : itemsLeft;
+        return this.total - ((this.totalPages - 1) * this.pageSize);
     }
 
     nextPage = () => {
@@ -183,9 +182,9 @@ class InfiniteScroll {
 
         this.currentPage++;
         
-        //if (this.itemsLoaded < this.total && (this.itemsLoaded / this.pageSize) < this.currentPage) {
+        if (this.itemsLoaded < this.total && (this.itemsLoaded / this.pageSize) < this.currentPage) {
             this.itemsLoaded = this.itemsLoaded + pageSize;
-        //}
+        }
 
         this.next = true;
     }
