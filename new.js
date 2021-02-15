@@ -171,7 +171,8 @@ class InfiniteScroll {
     }
 
     nextPage = () => {
-        if (!this.total || (this.currentPage * this.pageSize >= this.total)) {
+        if (!this.total || this.currentPage === this.totalPages) {
+            console.log(1111)
             return;
         }
 
