@@ -156,7 +156,7 @@ class InfiniteScroll {
     setTotal = (total) => {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
-        this.currentPage = 0; // -1
+        this.currentPage = 0;
         this.lastLoadedPage = 0;
         this.itemsLoaded = 0;
         this.dataGenerator = new DataGenerator(Math.random());
@@ -165,30 +165,11 @@ class InfiniteScroll {
     }
 
     getCurrentPageSize() {
-        if (this.currentPage + 1 < this.totalPages) {
+        if (this.currentPage < this.totalPages) {
             return this.pageSize;
         }
 
         return this.total - ((this.totalPages - 1) * this.pageSize);
-    }
-
-    nextPage2() {
-        if (!this.total || this.currentPage === this.totalPages) {
-            return;
-        }
-
-        if (this.lastLoadedPage > this.currentPage) {
-            this.currentPage = this.currentPage + (this.lastLoadedPage - this.currentPage > 1 ? 2 : 1);
-        }
-
-        this.view.render(
-            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize())
-        );
-
-        if (this.lastLoadedPage < this.currentPage) {
-            this.lastLoadedPage = this.currentPage;
-        }
-        this.currentPage++;
     }
 
     nextPage() {
@@ -196,39 +177,27 @@ class InfiniteScroll {
             return;
         }
 
-        // IMPROVE
-        if (this.currentPage === 0 && (this.itemsLoaded / this.pageSize) > 2) {
-            this.currentPage = 2;
+        if (this.lastLoadedPage - this.currentPage > 1) {
+            this.currentPage++;
         }
 
-        const pageSize = this.getCurrentPageSize();
-
-        console.log(this.lastLoadedPage - this.currentPage);
-
+        this.currentPage++;
         this.view.render(
-            this.dataGenerator.getData(this.currentPage, pageSize)
+            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize())
         );
 
         if (this.lastLoadedPage < this.currentPage) {
             this.lastLoadedPage = this.currentPage;
-        }// remove
-        this.currentPage++;
-        
-        if (this.itemsLoaded < this.total && (this.itemsLoaded / this.pageSize) < this.currentPage) {
-            this.itemsLoaded = this.itemsLoaded + pageSize;
         }
-
-        this.next = true;
     }
 
-    previousPage = () => {
-        if (!this.total || this.currentPage === 0) {
+    previousPage() {
+        if (!this.total || this.currentPage === 1) {
             return;
         }
 
-        if (this.next) {
-            this.next = false;
-            this.currentPage = this.currentPage > 2 ? (this.currentPage - 2) : 1;
+        if (this.currentPage === this.lastLoadedPage) {
+            this.currentPage--;
         }
 
         this.currentPage--;
