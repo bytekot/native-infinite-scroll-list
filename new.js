@@ -157,7 +157,7 @@ class InfiniteScroll {
         this.nextPage();
     }
 
-    getPageSize() {
+    getCurrentPageSize() {
         if (this.currentPage + 1 < this.totalPages) {
             return this.pageSize;
         }
@@ -174,7 +174,7 @@ class InfiniteScroll {
             this.currentPage = 2;
         }
 
-        const pageSize = this.getPageSize();
+        const pageSize = this.getCurrentPageSize();
 
         this.view.render(
             this.dataGenerator.getData(this.currentPage, pageSize)
@@ -202,7 +202,7 @@ class InfiniteScroll {
 
         this.currentPage--;
         this.view.render(
-            this.dataGenerator.getData(this.currentPage, 1000), // pageSize calculation
+            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize()),
             true
         );
     }
