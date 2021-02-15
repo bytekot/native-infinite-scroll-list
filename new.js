@@ -48,15 +48,7 @@ class ListView {
     }
 
     firstUpdate(data) {
-        this.itemWrappers[!this.data.current ? 0 : 1].querySelectorAll('span').forEach((span, index) => {
-            span.innerHTML = data[index];
-
-            if (data[index] === undefined) {
-                span.classList.add('hidden');
-            } else if (span.classList.contains('hidden')) {
-                span.classList.remove('hidden');
-            }
-        });
+        this.updateChunk(this.itemWrappers[!this.data.current ? 0 : 1], data);
 
         if (!this.data.current) {
             this.itemWrappers[1].querySelectorAll('span').forEach((span, index) => {
@@ -68,8 +60,22 @@ class ListView {
         this.data.current = data;
     }
 
+    updateChunk(wrapper, data) {
+        wrapper.querySelectorAll('span').forEach((span, index) => {
+            if (data[index] === undefined) {
+                span.classList.add('hidden');
+                return;
+            }
+
+            span.innerHTML = data[index];
+
+            if (span.classList.contains('hidden')) {
+                span.classList.remove('hidden');
+            }
+        });
+    }
+
     render(data, flag) { // flag
-        console.log('render', flag);
         if (!this.data.current || !this.data.previous) {
             this.firstUpdate(data);
             return;
@@ -90,15 +96,7 @@ class ListView {
             } else {
                 content = wrapperIndex === 0 ? data : this.data.previous;
             }
-            wrapper.querySelectorAll('span').forEach((span, index) => {
-                span.innerHTML = content[index];
-
-                if (content[index] === undefined) {
-                    span.classList.add('hidden');
-                } else if (span.classList.contains('hidden')) {
-                    span.classList.remove('hidden');
-                }
-            });
+            this.updateChunk(wrapper, content);
 
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
@@ -203,8 +201,7 @@ class InfiniteScroll {
 
         if (this.next) {
             this.next = false;
-            this.currentPage--;
-            this.currentPage--;
+            this.currentPage = this.currentPage > 2 ? (this.currentPage - 2) : 1;
         }
 
         this.currentPage--;
