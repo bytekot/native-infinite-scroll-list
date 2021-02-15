@@ -58,11 +58,18 @@ class ListView {
             }
         });
 
+        if (!this.data.current) {
+            this.itemWrappers[1].querySelectorAll('span').forEach((span, index) => {
+                span.classList.add('hidden');
+            });
+        }
+
         this.data.previous = this.data.current;
         this.data.current = data;
     }
 
     render(data, flag) { // flag
+        console.log('render', flag);
         if (!this.data.current || !this.data.previous) {
             this.firstUpdate(data);
             return;
