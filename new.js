@@ -18,11 +18,9 @@ class DataGenerator {
 }
 
 class ListView {
-    constructor(listSize) {
+    constructor(listChunkSize) {
         this.itemWrappers = document.querySelectorAll('.content-wrap');
-        this.sentinels = document.querySelectorAll('.observer');
-        this.listSize = listSize;
-        this.itemsCreated = false;
+        this.listChunkSize = listChunkSize;
         this.translateY = 0;
         this.data = {
             current: null,
@@ -34,7 +32,7 @@ class ListView {
     createListItems() {
         this.itemWrappers.forEach((wrapper, index) => {
             wrapper.insertAdjacentHTML(index === 0 ? 'beforeend' : 'afterbegin',
-                Array.from({ length: this.listSize }, () => '<span class="content-item hidden"></span>').join('')
+                Array.from({ length: this.listChunkSize }, () => '<span class="content-item hidden"></span>').join('')
             );
         });
     }
@@ -111,45 +109,11 @@ class ListView {
     }
 }
 
-class InfiniteScroll {
+class Paginator {
     constructor(pageSize) {
         this.pageSize = pageSize;
         this.currentPage = 0;
-        this.lastLoadedPage = 0;
-        this.itemsLoaded = 0;
         this.total = 0;
-        this.view = new ListView(this.pageSize);
-        this.observer = this.createObserver();
-
-        this.view.sentinels.forEach(sentinel => this.observer.observe(sentinel));
-    }
-
-    createObserver = () => {
-        const options = {
-            root: null,
-            rootMargin: '300px',
-            threshold: 0
-        };
-        const callback = entries => {
-            entries.forEach(sentinel => {
-                if (!sentinel.isIntersecting) {
-                    return;
-                }
-
-                const position = sentinel.target.getAttribute('data-id');
-
-                if (position === 'bottom') {
-                    this.nextPage();
-                    return;
-                }
-
-                if (position === 'top') {
-                    this.previousPage();
-                }
-            });
-        };
-
-        return new IntersectionObserver(callback, options);
         
     }
 
@@ -157,10 +121,8 @@ class InfiniteScroll {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
-        this.itemsLoaded = 0;
-        this.dataGenerator = new DataGenerator(Math.random());
-        this.view.refresh();
-        this.nextPage();
+        this.nextFlag = false;
+        this.previousFlag = false;
     }
 
     getCurrentPageSize() {
@@ -177,15 +139,20 @@ class InfiniteScroll {
         }
 
         if (this.previousFlag) {
+            if (this.totalPages === 2) {
+                return;
+            }
             this.currentPage++;
             this.previousFlag = false;
         }
 
         this.currentPage++;
-        this.view.render(
-            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize())
-        );
         this.nextFlag = true;
+
+        return {
+            number: this.currentPage,
+            size: this.getCurrentPageSize()
+        };
     }
 
     previousPage() {
@@ -194,22 +161,87 @@ class InfiniteScroll {
         }
 
         if (this.nextFlag) {
-            this.currentPage--;
+            this.currentPage = this.currentPage !== 2 ? this.currentPage - 1 : 2;
             this.nextFlag = false;
         }
 
         this.currentPage--;
-        this.view.render(
-            this.dataGenerator.getData(this.currentPage, this.getCurrentPageSize()),
-            true
-        );
         this.previousFlag = true;
+
+        return {
+            number: this.currentPage,
+            size: this.getCurrentPageSize()
+        };
     }
 }
 
+class InfiniteScrollList {
+    constructor(pageSize) {
+        this.view = new ListView(pageSize);
+        this.dataProvider = new DataGenerator(Math.random());
+        this.paginator = new Paginator(pageSize);
+        this.observer = this.createObserver();
+
+        document.querySelectorAll('.observer').forEach(sentinel => this.observer.observe(sentinel));
+    }
+
+    createObserver() {
+        const options = {
+            root: null,
+            rootMargin: '300px',
+            threshold: 0
+        };
+        const callback = entries => { // -> this.observerHandler()
+            entries.forEach(sentinel => {
+                if (!sentinel.isIntersecting) {
+                    return;
+                }
+
+                const scrollDirection = sentinel.target.getAttribute('data-scroll-direction');
+                let page;
+
+                switch (scrollDirection) {
+                    case 'bottom':
+                        page = this.paginator.nextPage();
+                        if (page) {
+                            this.view.render(
+                                this.dataProvider.getData(page.number, page.size)
+                            );
+                        }
+                        break;
+                
+                    case 'top':
+                        page = this.paginator.previousPage();
+                        if (page) {
+                            this.view.render(
+                                this.dataProvider.getData(page.number, page.size),
+                                true
+                            );
+                        }
+                        break;
+                }
+            });
+        };
+
+        return new IntersectionObserver(callback, options);
+    }
+
+    setItemsNumber(itemsNumber) {
+        this.view.refresh();
+        this.dataProvider = new DataGenerator(Math.random());
+        this.paginator.setTotal(itemsNumber);
+
+        const page = this.paginator.nextPage();
+        if (page) {
+            this.view.render(
+                this.dataProvider.getData(page.number, page.size)
+            );
+        }
+    }
+}
 
 window.onload = () => {
-    const infiniteScroll = new InfiniteScroll(1000);
+    const infiniteScrollList = new InfiniteScrollList(1000);
 
     let inputTimeoutId;
     const inputHandler = event => {
@@ -219,7 +251,8 @@ window.onload = () => {
 
         inputTimeoutId = setTimeout(() => {
             clearInterval(inputTimeoutId);
-            infiniteScroll.setTotal(Number(event.target.value));
+
+            infiniteScrollList.setItemsNumber(Number(event.target.value));
         }, 500);
     };
 
