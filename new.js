@@ -142,9 +142,12 @@ class InfiniteScroll {
         this.nextPage(); // refresh
     }
 
-    getPageSize = () => { // Пока принебрегаем
-        return this.pageSize;
+    getPageSize = () => {
+        if (this.itemsLoaded / this.pageSize > this.currentPage) {
+            return this.pageSize;
+        }
         const itemsLeft = this.total - this.itemsLoaded;
+
         return itemsLeft > this.pageSize ? this.pageSize : itemsLeft;
     }
 
