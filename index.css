@@ -1,6 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap");
-/*font-family: "Major Mono Display", monospace;*/
-
 .controls {
     text-align: center;
     padding-top: 20px;
@@ -40,9 +37,3 @@
 .content-item.hidden {
     display: none;
 }
-
-/*
-#content-container-bottom {
-    content-visibility: auto;
-}
-*/

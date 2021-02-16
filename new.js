@@ -73,7 +73,7 @@ class ListView {
         });
     }
 
-    render(data, flag) { // flag
+    render(data, flag) {
         if (!this.data.current || !this.data.previous) {
             this.firstUpdate(data);
             return;
@@ -161,7 +161,9 @@ class Paginator {
         }
 
         if (this.nextFlag) {
-            this.currentPage = this.currentPage !== 2 ? this.currentPage - 1 : 2;
+            this.currentPage = this.currentPage !== 2
+                ? this.currentPage - 1
+                : this.currentPage;
             this.nextFlag = false;
         }
 
@@ -191,39 +193,40 @@ class InfiniteScrollList {
             rootMargin: '300px',
             threshold: 0
         };
-        const callback = entries => { // -> this.observerHandler()
-            entries.forEach(sentinel => {
-                if (!sentinel.isIntersecting) {
-                    return;
-                }
 
-                const scrollDirection = sentinel.target.getAttribute('data-scroll-direction');
-                let page;
+        return new IntersectionObserver(this.observerHandler, options);
+    }
 
-                switch (scrollDirection) {
-                    case 'bottom':
-                        page = this.paginator.nextPage();
-                        if (page) {
-                            this.view.render(
-                                this.dataProvider.getData(page.number, page.size)
-                            );
-                        }
-                        break;
-                
-                    case 'top':
-                        page = this.paginator.previousPage();
-                        if (page) {
-                            this.view.render(
-                                this.dataProvider.getData(page.number, page.size),
-                                true
-                            );
-                        }
-                        break;
-                }
-            });
-        };
+    observerHandler = sentinelElements => {
+        sentinelElements.forEach(sentinel => {
+            if (!sentinel.isIntersecting) {
+                return;
+            }
 
-        return new IntersectionObserver(callback, options);
+            const scrollDirection = sentinel.target.getAttribute('data-scroll-direction');
+            let page;
+
+            switch (scrollDirection) {
+                case 'bottom':
+                    page = this.paginator.nextPage();
+                    if (page) {
+                        this.view.render(
+                            this.dataProvider.getData(page.number, page.size)
+                        );
+                    }
+                    break;
+
+                case 'top':
+                    page = this.paginator.previousPage();
+                    if (page) {
+                        this.view.render(
+                            this.dataProvider.getData(page.number, page.size),
+                            true
+                        );
+                    }
+                    break;
+            }
+        });
     }
 
     setItemsNumber(itemsNumber) {
@@ -241,10 +244,27 @@ class InfiniteScrollList {
 }
 
 window.onload = () => {
+    let inputTimeoutId;
+
     const infiniteScrollList = new InfiniteScrollList(1000);
 
-    let inputTimeoutId;
     const inputHandler = event => {
+        const showValidationError = () => {
+            document.getElementById('error-text').innerHTML = 'Invalid input value. It must be a non-negative integer.';
+        };
+
+        const clearValidationError = () => {
+            document.getElementById('error-text').innerHTML = '';
+        };
+
+        const isValid = value => {
+            const numberValue = Number(value);
+
+            return !isNaN(numberValue)
+                && value >= 0
+                && parseInt(value) === value;
+        };
+
         if (inputTimeoutId) {
             clearInterval(inputTimeoutId);
         }
@@ -252,7 +272,16 @@ window.onload = () => {
         inputTimeoutId = setTimeout(() => {
             clearInterval(inputTimeoutId);
 
-            infiniteScrollList.setItemsNumber(Number(event.target.value));
+            const value = Number(event.target.value);
+
+            if (!isValid(value)) {
+                showValidationError();
+                return;
+            }
+
+            clearValidationError();
+
+            infiniteScrollList.setItemsNumber(value);
         }, 500);
     };
 
