@@ -19,7 +19,7 @@ class DataProvider {
 
 class ListView {
     constructor(listChunkSize) {
-        this.itemWrappers = document.querySelectorAll('.content-wrap');
+        this.itemWrappers = document.querySelectorAll('.content-wrapper');
         this.listChunkSize = listChunkSize;
         this.translateY = 0;
         this.data = {
@@ -82,7 +82,7 @@ class ListView {
         if (!flag) {
             this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
         } else {
-            this.translateY = this.translateY !== 0 // improve ?
+            this.translateY = this.translateY !== 0
                 ? this.translateY - this.itemWrappers[0].offsetHeight
                 : this.translateY;
         }

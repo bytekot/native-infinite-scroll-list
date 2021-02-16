@@ -22,12 +22,12 @@ body {
     position: relative;
 }
 
-.content-wrap {
+.content-wrapper {
     display: flex;
     flex-flow: row wrap;
 }
 
-.content-wrap .content-item {
+.content-wrapper .content-item {
     padding: 16px 0;
     width: 8%;
     margin: 4px 1%;
