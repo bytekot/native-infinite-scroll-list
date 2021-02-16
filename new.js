@@ -19,7 +19,7 @@ class DataProvider {
 
 class ListView {
     constructor(listChunkSize) {
-        this.itemWrappers = document.querySelectorAll('.content-wrapper');
+        this.itemWrappers = document.querySelectorAll('.content-wrapper'); // save spans query
         this.listChunkSize = listChunkSize;
         this.translateY = 0;
         this.data = {
@@ -37,25 +37,21 @@ class ListView {
         });
     }
 
-    refresh() {
+    refresh(data) {
         this.translateY = 0;
         this.data = {
             current: null,
             previous: null
         };
-    }
 
-    firstUpdate(data) {
-        this.updateChunk(this.itemWrappers[!this.data.current ? 0 : 1], data);
-
-        if (!this.data.current) {
-            this.itemWrappers[1].querySelectorAll('span').forEach((span, index) => {
-                span.classList.add('hidden');
-            });
-        }
+        this.updateChunk(this.itemWrappers[0], data);
+        this.itemWrappers[1].querySelectorAll('span').forEach((span, index) => {
+            span.classList.add('hidden');
+        });
 
         this.data.previous = this.data.current;
         this.data.current = data;
+
     }
 
     updateChunk(wrapper, data) {
@@ -73,39 +69,34 @@ class ListView {
         });
     }
 
-    render(data, flag) {
-        if (!this.data.current || !this.data.previous) {
-            this.firstUpdate(data);
-            return;
-        }
-
-        if (!flag) {
+    displayNext(data) {
+        if (this.data.previous) {
             this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
-        } else {
-            this.translateY = this.translateY !== 0
-                ? this.translateY - this.itemWrappers[0].offsetHeight
-                : this.translateY;
         }
 
-        this.itemWrappers.forEach((wrapper, wrapperIndex) => {
-            let content;
-            if (!flag) {
-                content = wrapperIndex === 0 ? this.data.current : data;
-            } else {
-                content = wrapperIndex === 0 ? data : this.data.previous;
-            }
-            this.updateChunk(wrapper, content);
+        this.itemWrappers.forEach((wrapper, index) => {
+            this.updateChunk(wrapper, index === 0 ? this.data.current : data);
 
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
 
-        if (!flag) {
-            this.data.previous = this.data.current;
-            this.data.current = data;
-        } else {
-            this.data.current = this.data.previous;
-            this.data.previous = data;
-        }
+        this.data.previous = this.data.current;
+        this.data.current = data;
+    }
+
+    displayPrevious(data) {
+        this.translateY = this.translateY !== 0
+            ? this.translateY - this.itemWrappers[0].offsetHeight
+            : this.translateY;
+
+        this.itemWrappers.forEach((wrapper, index) => {
+            this.updateChunk(wrapper, index === 0 ? data : this.data.previous);
+
+            wrapper.style.transform = `translateY(${this.translateY}px)`;
+        });
+
+        this.data.current = this.data.previous;
+        this.data.previous = data;
     }
 }
 
@@ -117,7 +108,7 @@ class Paginator {
         
     }
 
-    setTotal = (total) => {
+    setTotal(total) {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
@@ -210,7 +201,7 @@ class InfiniteScrollList {
                 case 'bottom':
                     page = this.paginator.nextPage();
                     if (page) {
-                        this.view.render(
+                        this.view.displayNext(
                             this.dataProvider.getData(page.number, page.size)
                         );
                     }
@@ -219,9 +210,8 @@ class InfiniteScrollList {
                 case 'top':
                     page = this.paginator.previousPage();
                     if (page) {
-                        this.view.render(
-                            this.dataProvider.getData(page.number, page.size),
-                            true
+                        this.view.displayPrevious(
+                            this.dataProvider.getData(page.number, page.size)
                         );
                     }
                     break;
@@ -229,26 +219,14 @@ class InfiniteScrollList {
         });
     }
 
-    updateList(pageData, scrollDirection) {
-        if (pageData) {
-            this.view.render(
-                this.dataProvider.getData(pageData.number, pageData.size),
-                scrollDirection
-            );
-        }
-    }
-
     setItemsNumber(itemsNumber) {
-        this.view.refresh();
         this.dataProvider.instanceSeed = Math.random();
         this.paginator.setTotal(itemsNumber);
 
         const page = this.paginator.nextPage();
-        if (page) {
-            this.view.render(
-                this.dataProvider.getData(page.number, page.size)
-            );
-        }
+        this.view.refresh(
+            this.dataProvider.getData(page.number, page.size)
+        );
     }
 }
 
