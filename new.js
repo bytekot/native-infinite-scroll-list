@@ -244,10 +244,9 @@ class InfiniteScrollList {
 }
 
 window.onload = () => {
-    let inputTimeoutId;
-
     const infiniteScrollList = new InfiniteScrollList(1000);
 
+    let inputTimeoutId;
     const inputHandler = event => {
         const showValidationError = () => {
             document.getElementById('error-text').innerHTML = 'Invalid input value. It must be a non-negative integer.';
