@@ -1,4 +1,4 @@
-class DataGenerator {
+class DataProvider {
     constructor(instanceSeed) {
         this.instanceSeed = instanceSeed;
     }
@@ -121,8 +121,8 @@ class Paginator {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
-        this.nextFlag = false;
-        this.previousFlag = false;
+        this.movingForward = false;
+        this.movingBack = false;
     }
 
     getCurrentPageSize() {
@@ -138,16 +138,16 @@ class Paginator {
             return;
         }
 
-        if (this.previousFlag) {
+        if (this.movingBack) {
             if (this.totalPages === 2) {
                 return;
             }
             this.currentPage++;
-            this.previousFlag = false;
+            this.movingBack = false;
         }
 
         this.currentPage++;
-        this.nextFlag = true;
+        this.movingForward = true;
 
         return {
             number: this.currentPage,
@@ -160,15 +160,15 @@ class Paginator {
             return;
         }
 
-        if (this.nextFlag) {
+        if (this.movingForward) {
             this.currentPage = this.currentPage !== 2
                 ? this.currentPage - 1
                 : this.currentPage;
-            this.nextFlag = false;
+            this.movingForward = false;
         }
 
         this.currentPage--;
-        this.previousFlag = true;
+        this.movingBack = true;
 
         return {
             number: this.currentPage,
@@ -180,7 +180,7 @@ class Paginator {
 class InfiniteScrollList {
     constructor(pageSize) {
         this.view = new ListView(pageSize);
-        this.dataProvider = new DataGenerator(Math.random());
+        this.dataProvider = new DataProvider(Math.random());
         this.paginator = new Paginator(pageSize);
         this.observer = this.createObserver();
 
@@ -190,7 +190,7 @@ class InfiniteScrollList {
     createObserver() {
         const options = {
             root: null,
-            rootMargin: '300px',
+            rootMargin: '500px',
             threshold: 0
         };
 
@@ -229,9 +229,18 @@ class InfiniteScrollList {
         });
     }
 
+    updateList(pageData, scrollDirection) {
+        if (pageData) {
+            this.view.render(
+                this.dataProvider.getData(pageData.number, pageData.size),
+                scrollDirection
+            );
+        }
+    }
+
     setItemsNumber(itemsNumber) {
         this.view.refresh();
-        this.dataProvider = new DataGenerator(Math.random());
+        this.dataProvider.instanceSeed = Math.random();
         this.paginator.setTotal(itemsNumber);
 
         const page = this.paginator.nextPage();
