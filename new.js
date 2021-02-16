@@ -1,3 +1,68 @@
+class InfiniteScrollList {
+    constructor(pageSize, observerRootMargin) {
+        this.view = new ListView(pageSize);
+        this.dataProvider = new DataProvider(Math.random());
+        this.paginator = new Paginator(pageSize);
+        this.observer = this.createObserver(observerRootMargin);
+    }
+
+    createObserver(rootMargin) {
+        const options = {
+            root: null,
+            rootMargin: `${rootMargin}px`,
+            threshold: 0
+        };
+        const observer = new IntersectionObserver(this.observerHandler, options);
+
+        document.querySelectorAll('.observer').forEach(
+            sentinel => observer.observe(sentinel)
+        );
+
+        return observer;
+    }
+
+    observerHandler = sentinelElements => {
+        sentinelElements.forEach(sentinel => {
+            if (!sentinel.isIntersecting) {
+                return;
+            }
+
+            const scrollDirection = sentinel.target.getAttribute('data-scroll-direction');
+            let page;
+
+            switch (scrollDirection) {
+                case 'bottom':
+                    page = this.paginator.nextPage();
+                    if (page) {
+                        this.view.showNextPage(
+                            this.dataProvider.getData(page.number, page.size)
+                        );
+                    }
+                    break;
+
+                case 'top':
+                    page = this.paginator.previousPage();
+                    if (page) {
+                        this.view.showPreviousPage(
+                            this.dataProvider.getData(page.number, page.size)
+                        );
+                    }
+                    break;
+            }
+        });
+    }
+
+    setItemsNumber(itemsNumber) {
+        this.dataProvider.instanceSeed = Math.random();
+        this.paginator.setTotal(itemsNumber);
+
+        const page = this.paginator.nextPage();
+        this.view.refresh(
+            this.dataProvider.getData(page.number, page.size)
+        );
+    }
+}
+
 class DataProvider {
     constructor(instanceSeed) {
         this.instanceSeed = instanceSeed;
@@ -92,9 +157,10 @@ class ListView {
     }
 
     showPreviousPage(data) {
-        this.translateY = this.translateY !== 0
-            ? this.translateY - this.itemWrappers[0].offsetHeight
-            : this.translateY;
+        if (this.translateY === 0) {
+            return;
+        }
+        this.translateY = this.translateY - this.itemWrappers[0].offsetHeight;
 
         this.itemWrappers.forEach((wrapper, index) => {
             this.updateChunk(index, index === 0 ? data : this.data.previous);
@@ -175,78 +241,13 @@ class Paginator {
     }
 }
 
-class InfiniteScrollList {
-    constructor(pageSize, observerRootMargin) {
-        this.view = new ListView(pageSize);
-        this.dataProvider = new DataProvider(Math.random());
-        this.paginator = new Paginator(pageSize);
-        this.observer = this.createObserver(observerRootMargin);
-    }
-
-    createObserver(rootMargin) {
-        const options = {
-            root: null,
-            rootMargin: `${rootMargin}px`,
-            threshold: 0
-        };
-        const observer = new IntersectionObserver(this.observerHandler, options);
-
-        document.querySelectorAll('.observer').forEach(
-            sentinel => observer.observe(sentinel)
-        );
-
-        return observer;
-    }
-
-    observerHandler = sentinelElements => {
-        sentinelElements.forEach(sentinel => {
-            if (!sentinel.isIntersecting) {
-                return;
-            }
-
-            const scrollDirection = sentinel.target.getAttribute('data-scroll-direction');
-            let page;
-
-            switch (scrollDirection) {
-                case 'bottom':
-                    page = this.paginator.nextPage();
-                    if (page) {
-                        this.view.showNextPage(
-                            this.dataProvider.getData(page.number, page.size)
-                        );
-                    }
-                    break;
-
-                case 'top':
-                    page = this.paginator.previousPage();
-                    if (page) {
-                        this.view.showPreviousPage(
-                            this.dataProvider.getData(page.number, page.size)
-                        );
-                    }
-                    break;
-            }
-        });
-    }
-
-    setItemsNumber(itemsNumber) {
-        this.dataProvider.instanceSeed = Math.random();
-        this.paginator.setTotal(itemsNumber);
-
-        const page = this.paginator.nextPage();
-        this.view.refresh(
-            this.dataProvider.getData(page.number, page.size)
-        );
-    }
-}
-
 window.onload = () => {
     const PAGE_SIZE = 1000;
-    const OBSERVER_ROOT_MARGIN = 800;
+    const OBSERVER_ROOT_MARGIN = 1000;
 
     const infiniteScrollList = new InfiniteScrollList(PAGE_SIZE, OBSERVER_ROOT_MARGIN);
 
-    
+
     // Input handler & validation
     let inputTimeoutId;
     const inputHandler = event => {
