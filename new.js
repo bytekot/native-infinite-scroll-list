@@ -19,43 +19,50 @@ class DataProvider {
 
 class ListView {
     constructor(listChunkSize) {
-        this.itemWrappers = document.querySelectorAll('.content-wrapper'); // save spans query
         this.listChunkSize = listChunkSize;
         this.translateY = 0;
         this.data = {
             current: null,
             previous: null
         };
-        this.createListItems();
+        this.createItems();
     }
 
-    createListItems() {
-        this.itemWrappers.forEach((wrapper, index) => {
+    createItems() {
+        this.itemWrappers  = [];
+
+        document.querySelectorAll('.content-wrapper').forEach((wrapper, index) => {
+            this.itemWrappers.push(wrapper);
+
             wrapper.insertAdjacentHTML(index === 0 ? 'beforeend' : 'afterbegin',
                 Array.from({ length: this.listChunkSize }, () => '<span class="content-item hidden"></span>').join('')
             );
         });
     }
 
+    getItems() {
+        if (!this.items) {
+            this.items = [];
+            this.itemWrappers.forEach(wrapper => {
+                this.items.push(wrapper.querySelectorAll('span'));
+            });
+        }
+
+        return this.items;
+    }
+
     refresh(data) {
+        this.updateChunk(0, data);
+        this.getItems()[1].forEach(span  => span.classList.add('hidden'));
+
         this.translateY = 0;
-        this.data = {
-            current: null,
-            previous: null
-        };
-
-        this.updateChunk(this.itemWrappers[0], data);
-        this.itemWrappers[1].querySelectorAll('span').forEach((span, index) => {
-            span.classList.add('hidden');
-        });
-
-        this.data.previous = this.data.current;
         this.data.current = data;
+        this.data.previous = null;
 
     }
 
-    updateChunk(wrapper, data) {
-        wrapper.querySelectorAll('span').forEach((span, index) => {
+    updateChunk(chunkIndex, data) {
+        this.getItems()[chunkIndex].forEach((span, index) => {
             if (data[index] === undefined) {
                 span.classList.add('hidden');
                 return;
@@ -69,13 +76,13 @@ class ListView {
         });
     }
 
-    displayNext(data) {
+    showNextPage(data) {
         if (this.data.previous) {
             this.translateY = this.translateY + this.itemWrappers[0].offsetHeight;
         }
 
         this.itemWrappers.forEach((wrapper, index) => {
-            this.updateChunk(wrapper, index === 0 ? this.data.current : data);
+            this.updateChunk(index, index === 0 ? this.data.current : data);
 
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
@@ -84,13 +91,13 @@ class ListView {
         this.data.current = data;
     }
 
-    displayPrevious(data) {
+    showPreviousPage(data) {
         this.translateY = this.translateY !== 0
             ? this.translateY - this.itemWrappers[0].offsetHeight
             : this.translateY;
 
         this.itemWrappers.forEach((wrapper, index) => {
-            this.updateChunk(wrapper, index === 0 ? data : this.data.previous);
+            this.updateChunk(index, index === 0 ? data : this.data.previous);
 
             wrapper.style.transform = `translateY(${this.translateY}px)`;
         });
@@ -175,7 +182,9 @@ class InfiniteScrollList {
         this.paginator = new Paginator(pageSize);
         this.observer = this.createObserver();
 
-        document.querySelectorAll('.observer').forEach(sentinel => this.observer.observe(sentinel));
+        document.querySelectorAll('.observer').forEach(
+            sentinel => this.observer.observe(sentinel)
+        );
     }
 
     createObserver() {
@@ -201,7 +210,7 @@ class InfiniteScrollList {
                 case 'bottom':
                     page = this.paginator.nextPage();
                     if (page) {
-                        this.view.displayNext(
+                        this.view.showNextPage(
                             this.dataProvider.getData(page.number, page.size)
                         );
                     }
@@ -210,7 +219,7 @@ class InfiniteScrollList {
                 case 'top':
                     page = this.paginator.previousPage();
                     if (page) {
-                        this.view.displayPrevious(
+                        this.view.showPreviousPage(
                             this.dataProvider.getData(page.number, page.size)
                         );
                     }
