@@ -176,25 +176,26 @@ class Paginator {
 }
 
 class InfiniteScrollList {
-    constructor(pageSize) {
+    constructor(pageSize, observerRootMargin) {
         this.view = new ListView(pageSize);
         this.dataProvider = new DataProvider(Math.random());
         this.paginator = new Paginator(pageSize);
-        this.observer = this.createObserver();
-
-        document.querySelectorAll('.observer').forEach(
-            sentinel => this.observer.observe(sentinel)
-        );
+        this.observer = this.createObserver(observerRootMargin);
     }
 
-    createObserver() {
+    createObserver(rootMargin) {
         const options = {
             root: null,
-            rootMargin: '500px',
+            rootMargin: `${rootMargin}px`,
             threshold: 0
         };
+        const observer = new IntersectionObserver(this.observerHandler, options);
 
-        return new IntersectionObserver(this.observerHandler, options);
+        document.querySelectorAll('.observer').forEach(
+            sentinel => observer.observe(sentinel)
+        );
+
+        return observer;
     }
 
     observerHandler = sentinelElements => {
@@ -240,8 +241,13 @@ class InfiniteScrollList {
 }
 
 window.onload = () => {
-    const infiniteScrollList = new InfiniteScrollList(1000);
+    const PAGE_SIZE = 1000;
+    const OBSERVER_ROOT_MARGIN = 800;
 
+    const infiniteScrollList = new InfiniteScrollList(PAGE_SIZE, OBSERVER_ROOT_MARGIN);
+
+    
+    // Input handler & validation
     let inputTimeoutId;
     const inputHandler = event => {
         const showValidationError = () => {
