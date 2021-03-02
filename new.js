@@ -126,7 +126,7 @@ window.onload = () => {
             const numberValue = Number(value);
 
             return !isNaN(numberValue)
-                && value >= 0
+                && value > 0
                 && parseInt(value) === value;
         };
 
@@ -150,5 +150,5 @@ window.onload = () => {
         }, 500);
     };
 
-    document.getElementById('input').addEventListener('keypress', inputHandler);
+    document.getElementById('input').addEventListener('keydown', inputHandler);
 };

@@ -34,16 +34,7 @@ body {
     line-height: 8px;
     text-align: center;
     border-radius: 4px;
-    background-color: #e6e6e6;
+    border: 1px solid #e6e6e6;
     color: #999;
     user-select: none;
-}
-
-.content-item:first-child {
-    background-color: darksalmon;
-    color: #fff;
-}
-
-.content-item.hidden {
-    display: none;
 }
