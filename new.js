@@ -86,15 +86,12 @@ class Paginator {
         this.pageSize = pageSize;
         this.currentPage = 0;
         this.total = 0;
-        
     }
 
     setTotal(total) {
         this.total = total;
         this.totalPages = Math.ceil(this.total / this.pageSize);
         this.currentPage = 0;
-        this.movingForward = false;
-        this.movingBack = false;
     }
 
     getCurrentPageSize() {
@@ -110,16 +107,7 @@ class Paginator {
             return;
         }
 
-        if (this.movingBack) {
-            if (this.totalPages === 2) {
-                return;
-            }
-            this.currentPage++;
-            this.movingBack = false;
-        }
-
         this.currentPage++;
-        this.movingForward = true;
 
         return {
             number: this.currentPage,
