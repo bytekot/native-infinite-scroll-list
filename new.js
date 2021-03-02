@@ -1,7 +1,7 @@
 class InfiniteScrollList {
     constructor(pageSize, observerRootMargin) {
         this.view = new ListView();
-        this.dataProvider = new DataProvider(Math.random());
+        this.dataProvider = new DataProvider();
         this.paginator = new Paginator(pageSize);
         this.observer = this.createObserver(observerRootMargin);
     }
@@ -30,39 +30,27 @@ class InfiniteScrollList {
 
             if (page) {
                 this.view.showNextPage(
-                    this.dataProvider.getData(page.number, page.size)
+                    this.dataProvider.getData(page.size)
                 );
             }
         });
     }
 
     setItemsNumber(itemsNumber) {
-        this.dataProvider.instanceSeed = Math.random();
         this.paginator.setTotal(itemsNumber);
 
         const page = this.paginator.nextPage();
         this.view.refresh(
-            this.dataProvider.getData(page.number, page.size)
+            this.dataProvider.getData(page.size)
         );
     }
 }
 
 class DataProvider {
-    constructor(instanceSeed) {
-        this.instanceSeed = instanceSeed;
-    }
-
-    makeRandom(initialSeed) {
-        let seed = initialSeed;
-        return () => {
-            seed = Math.sin(seed) * 10000;
-            return Math.floor((seed - Math.floor(seed)) * 10);
-        };
-    }
-
-    getData(page, length) {
-        const random = this.makeRandom(this.instanceSeed + page);
-        return Array.from({ length: length }, () => random());
+    getData(length) {
+        return Array.from({ length: length }, () =>
+            Math.floor(Math.random() * 10)
+        );
     }
 }
 
